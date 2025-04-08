@@ -11,8 +11,7 @@ cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 cliente.connect((TCP_IP, TCP_PORTA_SERVER))
 
 # envia mensagem para servidor
-MENSAGEM = input("Type your message for server: ")
-cliente.send(MENSAGEM.encode('UTF-8'))
+cliente.send("aa".encode('utf-8'))
 
 while 1:
     # recebe dados do servidor
