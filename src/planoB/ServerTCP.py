@@ -2,13 +2,12 @@ import socket
 import json
 import carbone_sdk
 
-csdk = carbone_sdk.CarboneSDK("ACCESS-TOKEN")
+csdk = carbone_sdk.CarboneSDK("test_eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxMTMwNTQwNDc3MjQ3OTk1OTk4IiwiYXVkIjoiY2FyYm9uZSIsImV4cCI6MjQwNjQ4NjEyOCwiZGF0YSI6eyJ0eXBlIjoidGVzdCJ9fQ.AYIinvkaYLhjAnM92Aj0tlbyiW1EQVWbg4SdFgrgMCk8evHlSjav7AiXYcFU6QMTrk3zjmGjocWL3Pk6CH106_61AWzrCufXuRaF9ZpmPD6riQWw71jIUxXicrCIOFbPDuRpdLpqyc-wG1Srbuoce0-rdjMdmEUeJa7ocp6PgZvVvB0B")
 
 template_path = "./template.docx"
 
-client_data = []
 
-TCP_IP = '192.168.15.59' # endereço IP do servidor
+TCP_IP = '127.0.0.1' # endereço IP do servidor
 TCP_PORTA = 32336 # porta disponibilizada pelo servidor dessa máquina
 TAMANHO_BUFFER = 1024
 
@@ -37,14 +36,22 @@ while 1:
             print("Chat closed")
             break
         try:
-            dados_json = json.loads(dataReceived.decode('utf-8'))
-            client_data.append(dados_json)  # Armazenando em memória
-            print(dados_json)
+            icms = 0.2
+            dados_cliente = json.loads(dataReceived.decode('utf-8'))
+            nomeEmp = dados_cliente['nome']
+            endereco = dados_cliente['endereco']
+            dataFat = dados_cliente['data']
+            ativos = dados_cliente['ativos']
+
             json_data = {
 
                 "data": {
-                    ""
-                }
+                    "nomeEmp": nomeEmp,
+                    "endereco": endereco,
+                    "dataFat": dataFat,
+                    "ativos": ativos
+                },
+                "convertTo": "pdf"
 
             }
             report_bytes, unique_report_name = csdk.render(template_path, json_data)

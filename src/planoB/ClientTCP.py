@@ -1,34 +1,93 @@
-import socket #importa modulo socket
-
-TCP_IP = '192.168.15.59' # endereço IP do servidor
-TCP_PORTA_SERVER = 32336 # porta disponibilizada pelo servidor dessa máquina
-TAMANHO_BUFFER = 1024
+import socket
+import json
+import time
 
 
-# Criação de socket TCP do cliente
-cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# Conecta ao servidor em IP e porta especifica
-cliente.connect((TCP_IP, TCP_PORTA_SERVER))
+def enviar_dados_energia():
+    TCP_IP = '127.0.0.1'  # endereço IP lucas
+    TCP_PORTA_SERVER = 32336  # porta disponibilizada pelo servidor dessa máquina
+    TAMANHO_BUFFER = 1024
 
-# envia mensagem para servidor
-MENSAGEM = input("Type your message for server: ")
-cliente.send(MENSAGEM.encode('UTF-8'))
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((TCP_IP, TCP_PORTA_SERVER))
 
-while 1:
-    # recebe dados do servidor
-    dataReceived, addr = cliente.recvfrom(1024)
-    if dataReceived:
-        print ("Received message:", dataReceived)
-        if dataReceived == b"QUIT":
-            cliente.send("QUIT".encode('UTF-8'))
-            print("Chat closed")
-            break
+    print("\n=== ANALISE DE ECONOMIA DE ENERGIA ===\n")
 
-        # envia mensagem para servidor
-        MENSAGEM = input("Type your message for server: ")
-        cliente.send(MENSAGEM.encode('UTF-8'))
+    # Coleta dados do cliente
+    nome_cliente = input("Nome do cliente: ")
+    endereco = input("Endereço: ")
+    # ativos obrigatorios: nome, qtd, potencia e horas_uso
+    ativos = []
 
-# fecha conexão com servidor
-cliente.close()
+    continuar = True
+    while continuar:
+        print("\n=== Adicionar ativo eletrico ===")
+        nome_ativo = input("Nome do ativo (ex: Ar-condicionado, Geladeira): ")
+
+        try:
+            qtd = int(input("quantidade: "))
+            potencia = float(input("potencia em watts: "))
+            horas_uso = float(input("horas de uso diario: "))
+        except ValueError:
+            print("Erro: Por favor, insira valores numericos validos.")
+            continue
+
+        ativos.append({
+            'nome': nome_ativo,
+            'quantidade': qtd,
+            'potencia': potencia,
+            'horas_uso': horas_uso
+        })
+
+        opcao = input("\nDeseja adicionar outro ativo? (s/n): ")
+        continuar = opcao.lower() == 's'
+
+    # Prepara os dados para enviar
+    dados = {
+        'nome': nome_cliente,
+        'endereco': endereco,
+        'data': time.strftime("%d/%m/%Y"),
+        'ativos': ativos
+    }
+
+    # Envia os dados para o servidor
+    client.send(json.dumps(dados).encode('utf-8'))
+
+    # Recebe a resposta do servidor
+    resposta = client.recv(1024).decode('utf-8')
+
+    if resposta == "ARQUIVO_PDF":
+
+        client.send("PRONTO".encode('utf-8'))
+        file_size = int(client.recv(1024).decode('utf-8'))
+        client.send("OK".encode('utf-8'))
+
+        # Recebe o arquivo
+        pdf_data = b''
+        bytes_recebidos = 0
+
+        while bytes_recebidos < file_size:
+            data = client.recv(4096)
+            if not data:
+                break
+            pdf_data += data
+            bytes_recebidos += len(data)
+
+        pdf_path = f"pdfs/economia_energia_{nome_cliente.replace(' ', '_')}.pdf"
+        with open(pdf_path, 'wb') as file:
+            file.write(pdf_data)
+
+        print(f"\nRelatorio salvo em: {pdf_path}")
+    else:
+        print(f"\nErro: {resposta}")
+
+    client.close()
 
 
+if __name__ == "__main__":
+    try:
+        enviar_dados_energia()
+    except Exception as e:
+        print(f"Erro: {e}")
+
+    input("\nPressione Enter para sair...")
