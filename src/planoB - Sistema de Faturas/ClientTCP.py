@@ -81,6 +81,7 @@ def enviar_dados_energia():
     else:
         print(f"\nErro: {resposta}")
 
+    client.send("QUIT".encode('utf-8'))
     client.close()
 
 
