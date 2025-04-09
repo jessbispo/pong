@@ -4,7 +4,7 @@ import os
 import time
 
 def enviar_dados_energia():
-    TCP_IP = '192.168.15.59' # endereço IP lucas
+    TCP_IP = '127.0.0.1' # endereço IP lucas
     TCP_PORTA_SERVER = 32336 # porta disponibilizada pelo servidor dessa máquina
     TAMANHO_BUFFER = 1024
 
