@@ -4,8 +4,8 @@ import carbone_sdk
 import random
 
 #Contrutor do carbone SDK
-# csdk = carbone_sdk.CarboneSDK("Preencha com seu token de API da sua conta carbone")
-csdk = carbone_sdk.CarboneSDK() # Passe no terminal com export <test_api_token>
+csdk = carbone_sdk.CarboneSDK("test_eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxMTMwNTQwNDc3MjQ3OTk1OTk4IiwiYXVkIjoiY2FyYm9uZSIsImV4cCI6MjQwNjQ4NjEyOCwiZGF0YSI6eyJ0eXBlIjoidGVzdCJ9fQ.AYIinvkaYLhjAnM92Aj0tlbyiW1EQVWbg4SdFgrgMCk8evHlSjav7AiXYcFU6QMTrk3zjmGjocWL3Pk6CH106_61AWzrCufXuRaF9ZpmPD6riQWw71jIUxXicrCIOFbPDuRpdLpqyc-wG1Srbuoce0-rdjMdmEUeJa7ocp6PgZvVvB0B")
+# csdk = carbone_sdk.CarboneSDK() # Passe no terminal com export <test_api_token>
 
 template_path = "../../docs/FATURA.docx"
 
@@ -31,7 +31,6 @@ print ('Connected address:', addrReceived)
 while 1:
     #dados retidados da mensagem recebida
     dataReceived = conn.recv(TAMANHO_BUFFER)
-    print(dataReceived.decode('utf-8'))
     if dataReceived:
         if dataReceived == b"QUIT":
             conn.sendall("QUIT".encode('utf-8'))
@@ -55,13 +54,14 @@ while 1:
             total_ml = 0
 
             for ativo in ativos:
-                cstMR = ativo['gasto_atual'] * custo_kwh_mr * (1 + icms)
-                cstML = ativo['gasto_atual'] * custo_kwh_ml * (1 + icms) + pld_ne
+                gasto_atual = ativo['potencia'] * ativo['horas_uso'] * 0.03
+                cstMR = gasto_atual * custo_kwh_mr * (1 + icms)
+                cstML = gasto_atual * custo_kwh_ml * (1 + icms) + pld_ne
                 total_mr += cstMR
                 total_ml += cstML
                 custo_por_ativo.append({
                     "nome": ativo['nome'],
-                    "gasto": ativo['gasto_atual'],
+                    "gasto": gasto_atual,
                     "cstMR": cstMR,
                     "cstML": cstML
                 })
@@ -91,7 +91,9 @@ while 1:
             fd.write(report_bytes)
             fd.close()
 
+
             conn.sendall("Fatura gerada!".encode('utf-8'))  # envia dados recebidos em letra maiuscula
+
 
         except Exception as e:
             print(f"Erro ao processar os dados: {e}")
